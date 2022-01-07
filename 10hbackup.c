@@ -1,4 +1,5 @@
 #include <curl/curl.h>
+#include <json-c/json.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -16,7 +17,7 @@ int
 http_request(CURL *handler, char *uri, struct http_data *data);
 
 int
-get_playlists(CURL *handler, char *token, struct http_data *data);
+get_playlists(CURL *handler, char *token);
 
 int
 main(int argc, char *argv[])
@@ -33,15 +34,10 @@ main(int argc, char *argv[])
 	curl_global_init(CURL_GLOBAL_ALL);
 	CURL *curl = curl_easy_init();
 
-	struct http_data deezer_data;
-	deezer_data.data = malloc(1);
-	deezer_data.size = 0;
-
-	get_playlists(curl, token, &deezer_data);
+	get_playlists(curl, token);
 
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
-	free(deezer_data.data);
 
 	return EXIT_SUCCESS;
 }
@@ -71,18 +67,70 @@ http_request(CURL *handler, char *uri, struct http_data *data)
 }
 
 int
-get_playlists(CURL *handler, char *token, struct http_data *data)
+get_playlists(CURL *handler, char *token)
 {
 	int uri_size = strlen(BASE_DEEZER_URI) + strlen("/user/me/playlists") +
 		strlen("?access_token=") + strlen(token);
 	char uri[uri_size];
+	size_t nb_playlists;
+	struct json_object *parsed_playlists;
+	struct json_object *uri_next_obj;
+	struct json_object *data_array;
+	struct http_data deezer_data;
+	struct json_object *playlists_array;
+	deezer_data.data = malloc(1);
+	deezer_data.size = 0;
 
 	strncpy(uri, BASE_DEEZER_URI, strlen(BASE_DEEZER_URI));
 	strncat(uri, "/user/me/playlists", strlen("/user/me/playlists"));
 	strncat(uri, "?access_token=", strlen("?access_token="));
 	strncat(uri, token, strlen(token));
 
-	return http_request(handler, uri, data);
+	http_request(handler, uri, &deezer_data);
+	parsed_playlists = json_tokener_parse(deezer_data.data);
+
+	if (parsed_playlists == NULL) {
+		fprintf(stderr, "Error occured while parsing playlists' JSON\n");
+		return 1;
+	}
+
+	playlists_array = json_object_new_array();
+	json_object_object_get_ex(parsed_playlists, "data", &data_array);
+
+	json_object_object_get_ex(parsed_playlists, "next", &uri_next_obj);
+	const char *uri_next = json_object_get_string(uri_next_obj);
+
+	nb_playlists = json_object_array_length(data_array);
+
+	for (size_t i=0; i < nb_playlists; i++) {
+		json_object_array_add(playlists_array, json_object_array_get_idx(data_array, i));
+	}
+
+	free(deezer_data.data);
+	deezer_data.size = 0;
+	deezer_data.data = malloc(1);
+
+	while (uri_next != NULL) {
+		http_request(handler, (char *)uri_next, &deezer_data);
+		parsed_playlists = json_tokener_parse(deezer_data.data);
+
+		json_object_object_get_ex(parsed_playlists, "next", &uri_next_obj);
+		json_object_object_get_ex(parsed_playlists, "data", &data_array);
+
+		nb_playlists = json_object_array_length(data_array);
+		uri_next = json_object_get_string(uri_next_obj);
+
+		for (size_t i=0; i < nb_playlists; i++) {
+			json_object_array_add(playlists_array,
+					json_object_array_get_idx(data_array, i));
+		}
+
+		free(deezer_data.data);
+		deezer_data.size = 0;
+		deezer_data.data = malloc(1);
+	}
+
+	return 0;
 }
 
 
