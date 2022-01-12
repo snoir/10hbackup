@@ -7,14 +7,14 @@
 
 struct http_data {
 	size_t size;
-	char *data;
+	char **data;
 };
 
 size_t
 deezer_callback(char *data, size_t size, size_t nmemb, struct http_data *userdata);
 
 int
-http_request(CURL *handler, char *uri, struct http_data *data);
+http_request(CURL *handler, char *uri, char **buffer);
 
 int
 get_playlists(CURL *handler, char *token);
@@ -43,14 +43,15 @@ main(int argc, char *argv[])
 }
 
 int
-http_request(CURL *handler, char *uri, struct http_data *data)
+http_request(CURL *handler, char *uri, char **buffer)
 {
 	CURLcode res;
 	char err_buff[CURL_ERROR_SIZE];
+	struct http_data data = { .size = 0, .data = buffer };
 
 	curl_easy_setopt(handler, CURLOPT_ERRORBUFFER, err_buff);
 	curl_easy_setopt(handler, CURLOPT_WRITEFUNCTION, &deezer_callback);
-	curl_easy_setopt(handler, CURLOPT_WRITEDATA, data);
+	curl_easy_setopt(handler, CURLOPT_WRITEDATA, &data);
 
 	curl_easy_setopt(handler, CURLOPT_URL, uri);
 
@@ -60,7 +61,7 @@ http_request(CURL *handler, char *uri, struct http_data *data)
 		fprintf(stderr, "Error occured:\n");
 		fprintf(stderr, "  %s\n", err_buff);
 	} else {
-		printf("%.*s", (int)data->size, data->data);
+		printf("%.*s", (int)data.size, *buffer);
 	}
 
 	return res;
@@ -76,18 +77,16 @@ get_playlists(CURL *handler, char *token)
 	struct json_object *parsed_playlists;
 	struct json_object *uri_next_obj;
 	struct json_object *data_array;
-	struct http_data deezer_data;
 	struct json_object *playlists_array;
-	deezer_data.data = malloc(1);
-	deezer_data.size = 0;
+	char *buffer = malloc(1);
 
 	strncpy(uri, BASE_DEEZER_URI, strlen(BASE_DEEZER_URI));
 	strncat(uri, "/user/me/playlists", strlen("/user/me/playlists"));
 	strncat(uri, "?access_token=", strlen("?access_token="));
 	strncat(uri, token, strlen(token));
 
-	http_request(handler, uri, &deezer_data);
-	parsed_playlists = json_tokener_parse(deezer_data.data);
+	http_request(handler, uri, &buffer);
+	parsed_playlists = json_tokener_parse(buffer);
 
 	if (parsed_playlists == NULL) {
 		fprintf(stderr, "Error occured while parsing playlists' JSON\n");
@@ -106,13 +105,12 @@ get_playlists(CURL *handler, char *token)
 		json_object_array_add(playlists_array, json_object_array_get_idx(data_array, i));
 	}
 
-	free(deezer_data.data);
-	deezer_data.size = 0;
-	deezer_data.data = malloc(1);
+	free(buffer);
+	buffer = malloc(1);
 
 	while (uri_next != NULL) {
-		http_request(handler, (char *)uri_next, &deezer_data);
-		parsed_playlists = json_tokener_parse(deezer_data.data);
+		http_request(handler, (char *)uri_next, &buffer);
+		parsed_playlists = json_tokener_parse(buffer);
 
 		json_object_object_get_ex(parsed_playlists, "next", &uri_next_obj);
 		json_object_object_get_ex(parsed_playlists, "data", &data_array);
@@ -125,9 +123,8 @@ get_playlists(CURL *handler, char *token)
 					json_object_array_get_idx(data_array, i));
 		}
 
-		free(deezer_data.data);
-		deezer_data.size = 0;
-		deezer_data.data = malloc(1);
+		free(buffer);
+		buffer = malloc(1);
 	}
 
 	return 0;
@@ -138,9 +135,10 @@ size_t
 deezer_callback(char *data, size_t size, size_t nmemb, struct http_data *userdata) {
 	int realsize = size * nmemb;
 
-	userdata->data = realloc(userdata->data, userdata->size + realsize);
+	char *data_ptr = realloc(*userdata->data, userdata->size + realsize);
+	*userdata->data = data_ptr;
 
-	memcpy(&userdata->data[userdata->size], data, realsize);
+	memcpy(&data_ptr[userdata->size], data, realsize);
 	userdata->size += realsize;
 
 	return realsize;
