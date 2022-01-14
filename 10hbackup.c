@@ -17,7 +17,10 @@ int
 http_request(CURL *handler, char *uri, char **buffer);
 
 int
-get_playlists(CURL *handler, char *token, struct json_object *playlists_array);
+get_json_data_array(CURL *handler, char *token, struct json_object *playlists_array);
+
+char *
+uri_concat(char *path, char *token);
 
 int
 main(int argc, char *argv[])
@@ -35,7 +38,8 @@ main(int argc, char *argv[])
 	curl_global_init(CURL_GLOBAL_ALL);
 	CURL *curl = curl_easy_init();
 
-	get_playlists(curl, token, playlists_array);
+	char *playlists_uri = uri_concat("/user/me/playlists", token);
+	get_json_data_array(curl, playlists_uri, playlists_array);
 
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
@@ -62,21 +66,14 @@ http_request(CURL *handler, char *uri, char **buffer)
 }
 
 int
-get_playlists(CURL *handler, char *token, struct json_object *playlists_array)
+get_json_data_array(CURL *handler, char *uri, struct json_object *playlists_array)
 {
-	int uri_size = strlen(BASE_DEEZER_URI) + strlen("/user/me/playlists") +
-		strlen("?access_token=") + strlen(token);
-	char uri[uri_size];
 	size_t nb_playlists;
 	struct json_object *parsed_playlists;
 	struct json_object *uri_next_obj;
 	struct json_object *data_array;
 	char *buffer = malloc(1);
 
-	strncpy(uri, BASE_DEEZER_URI, strlen(BASE_DEEZER_URI));
-	strncat(uri, "/user/me/playlists", strlen("/user/me/playlists"));
-	strncat(uri, "?access_token=", strlen("?access_token="));
-	strncat(uri, token, strlen(token));
 	http_request(handler, uri, &buffer);
 	parsed_playlists = json_tokener_parse(buffer);
 
@@ -124,7 +121,6 @@ get_playlists(CURL *handler, char *token, struct json_object *playlists_array)
 	return 0;
 }
 
-
 size_t
 deezer_callback(char *data, size_t size, size_t nmemb, struct http_data *userdata) {
 	int realsize = size * nmemb;
@@ -136,4 +132,18 @@ deezer_callback(char *data, size_t size, size_t nmemb, struct http_data *userdat
 	userdata->size += realsize;
 
 	return realsize;
+}
+
+char *
+uri_concat(char *path, char *token) {
+	int uri_size = strlen(BASE_DEEZER_URI) + strlen(path) +
+		strlen("?access_token=") + strlen(token);
+	char *uri = malloc(sizeof(char) * (uri_size + 1));
+
+	strncpy(uri, BASE_DEEZER_URI, strlen(BASE_DEEZER_URI));
+	strncat(uri, path, strlen(path));
+	strncat(uri, "?access_token=", strlen("?access_token="));
+	strncat(uri, token, strlen(token));
+
+	return uri;
 }
