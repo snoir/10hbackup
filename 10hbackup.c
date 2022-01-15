@@ -73,34 +73,17 @@ get_json_data_array(CURL *handler, char *uri, struct json_object *playlists_arra
 	struct json_object *uri_next_obj;
 	struct json_object *data_array;
 	char *buffer = malloc(1);
-
-	http_request(handler, uri, &buffer);
-	parsed_playlists = json_tokener_parse(buffer);
-
-	if (parsed_playlists == NULL) {
-		fprintf(stderr, "Error occured while parsing playlists' JSON\n");
-		return 1;
-	}
-
-	json_object_object_get_ex(parsed_playlists, "data", &data_array);
-
-	json_object_object_get_ex(parsed_playlists, "next", &uri_next_obj);
-	const char *uri_next = json_object_get_string(uri_next_obj);
-
-	nb_playlists = json_object_array_length(data_array);
-
-	for (size_t i=0; i < nb_playlists; i++) {
-		json_object *item = json_object_array_get_idx(data_array, i);
-		json_object_get(item);
-		json_object_array_add(playlists_array, item);
-	}
-
-	free(buffer);
-	buffer = malloc(1);
+	const char *uri_next = uri;
 
 	while (uri_next != NULL) {
+		buffer = malloc(1);
 		http_request(handler, (char *)uri_next, &buffer);
 		parsed_playlists = json_tokener_parse(buffer);
+
+		if (parsed_playlists == NULL) {
+			fprintf(stderr, "Error occured while parsing playlists' JSON\n");
+			return 1;
+		}
 
 		json_object_object_get_ex(parsed_playlists, "next", &uri_next_obj);
 		json_object_object_get_ex(parsed_playlists, "data", &data_array);
@@ -115,7 +98,6 @@ get_json_data_array(CURL *handler, char *uri, struct json_object *playlists_arra
 		}
 
 		free(buffer);
-		buffer = malloc(1);
 	}
 
 	return 0;
