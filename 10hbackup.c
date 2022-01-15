@@ -63,7 +63,7 @@ http_request(CURL *handler, char *uri, char **buffer)
 	res = curl_easy_perform(handler);
 
 	if (res != CURLE_OK) {
-		fprintf(stderr, "HTTP error occured:\n");
+		fprintf(stderr, "Error occured while fetching data:\n");
 		fprintf(stderr, "  %s\n", err_buff);
 		return 1;
 	}
