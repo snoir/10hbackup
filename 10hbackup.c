@@ -62,22 +62,33 @@ http_request(CURL *handler, char *uri, char **buffer)
 
 	res = curl_easy_perform(handler);
 
-	return res;
+	if (res != CURLE_OK) {
+		fprintf(stderr, "HTTP error occured:\n");
+		fprintf(stderr, "  %s\n", err_buff);
+		return 1;
+	}
+
+	return 0;
 }
 
 int
 get_json_data_array(CURL *handler, char *uri, json_object *item_list_array)
 {
-	size_t nb_items;
 	struct json_object *parsed_json;
 	struct json_object *uri_next_obj;
 	struct json_object *current_data_array;
+	int http_res;
+	size_t nb_items;
 	char *buffer = malloc(1);
 	const char *uri_next = uri;
 
 	while (uri_next != NULL) {
 		buffer = malloc(1);
-		http_request(handler, (char *)uri_next, &buffer);
+		http_res = http_request(handler, (char *)uri_next, &buffer);
+
+		if (http_res)
+			return 1;
+
 		parsed_json = json_tokener_parse(buffer);
 
 		if (parsed_json == NULL) {
