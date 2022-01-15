@@ -77,6 +77,7 @@ get_json_data_array(CURL *handler, char *uri, json_object *item_list_array)
 	struct json_object *parsed_json;
 	struct json_object *uri_next_obj;
 	struct json_object *current_data_array;
+	struct json_object *deezer_error;
 	int http_res;
 	size_t nb_items;
 	char *buffer = malloc(1);
@@ -93,6 +94,17 @@ get_json_data_array(CURL *handler, char *uri, json_object *item_list_array)
 
 		if (parsed_json == NULL) {
 			fprintf(stderr, "Error occured while parsing JSON\n");
+			return 1;
+		}
+
+		json_object_object_get_ex(parsed_json, "error", &deezer_error);
+
+		if (deezer_error != NULL) {
+			json_object *error_type = json_object_object_get(deezer_error, "type");
+			json_object *error_message = json_object_object_get(deezer_error, "message");
+			fprintf(stderr, "%s Deezer error:\n",
+					json_object_get_string(error_type));
+			fprintf(stderr, "  %s\n", json_object_get_string(error_message));
 			return 1;
 		}
 
