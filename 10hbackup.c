@@ -17,7 +17,7 @@ int
 http_request(CURL *handler, char *uri, char **buffer);
 
 int
-get_json_data_array(CURL *handler, char *token, struct json_object *playlists_array);
+get_json_data_array(CURL *handler, char *token, json_object *item_list_array);
 
 char *
 uri_concat(char *path, char *token);
@@ -26,7 +26,7 @@ int
 main(int argc, char *argv[])
 {
 	char token[255];
-	json_object *playlists_array = json_object_new_array();
+	json_object *playlist_list_array = json_object_new_array();
 
 	if (argc < 2) {
 		fprintf(stderr, "Missing deezer token as argument\n");
@@ -39,7 +39,7 @@ main(int argc, char *argv[])
 	CURL *curl = curl_easy_init();
 
 	char *playlists_uri = uri_concat("/user/me/playlists", token);
-	get_json_data_array(curl, playlists_uri, playlists_array);
+	get_json_data_array(curl, playlists_uri, playlist_list_array);
 
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
@@ -66,35 +66,35 @@ http_request(CURL *handler, char *uri, char **buffer)
 }
 
 int
-get_json_data_array(CURL *handler, char *uri, struct json_object *playlists_array)
+get_json_data_array(CURL *handler, char *uri, json_object *item_list_array)
 {
-	size_t nb_playlists;
-	struct json_object *parsed_playlists;
+	size_t nb_items;
+	struct json_object *parsed_json;
 	struct json_object *uri_next_obj;
-	struct json_object *data_array;
+	struct json_object *current_data_array;
 	char *buffer = malloc(1);
 	const char *uri_next = uri;
 
 	while (uri_next != NULL) {
 		buffer = malloc(1);
 		http_request(handler, (char *)uri_next, &buffer);
-		parsed_playlists = json_tokener_parse(buffer);
+		parsed_json = json_tokener_parse(buffer);
 
-		if (parsed_playlists == NULL) {
-			fprintf(stderr, "Error occured while parsing playlists' JSON\n");
+		if (parsed_json == NULL) {
+			fprintf(stderr, "Error occured while parsing JSON\n");
 			return 1;
 		}
 
-		json_object_object_get_ex(parsed_playlists, "next", &uri_next_obj);
-		json_object_object_get_ex(parsed_playlists, "data", &data_array);
+		json_object_object_get_ex(parsed_json, "next", &uri_next_obj);
+		json_object_object_get_ex(parsed_json, "data", &current_data_array);
 
-		nb_playlists = json_object_array_length(data_array);
+		nb_items = json_object_array_length(current_data_array);
 		uri_next = json_object_get_string(uri_next_obj);
 
-		for (size_t i=0; i < nb_playlists; i++) {
-			json_object *item = json_object_array_get_idx(data_array, i);
+		for (size_t i=0; i < nb_items; i++) {
+			json_object *item = json_object_array_get_idx(current_data_array, i);
 			json_object_get(item);
-			json_object_array_add(playlists_array, item);
+			json_object_array_add(item_list_array, item);
 		}
 
 		free(buffer);
