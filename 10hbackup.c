@@ -47,12 +47,12 @@ main(int argc, char *argv[])
 
 	char *playlists_uri = uri_concat("/user/me/playlists", token);
 	res = get_json_data_array(curl, playlists_uri, playlist_list_array);
-	if (res) {
+	if (res == -1) {
 		goto cleanup;
 	}
 
 	res = write_json_to_file(playlist_list_array, "playlists.json");
-	if (res) {
+	if (res == -1) {
 		goto cleanup;
 	}
 
@@ -60,7 +60,7 @@ cleanup:
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
 
-	return res;
+	return (res);
 }
 
 int
@@ -81,10 +81,10 @@ http_request(CURL *handler, char *uri, char **buffer)
 	if (res != CURLE_OK) {
 		fprintf(stderr, "Error occured while fetching data:\n");
 		fprintf(stderr, "  %s\n", err_buff);
-		return 1;
+		return (-1);
 	}
 
-	return 0;
+	return (0);
 }
 
 int
@@ -103,14 +103,14 @@ get_json_data_array(CURL *handler, char *uri, json_object *item_list_array)
 		buffer = malloc(1);
 		http_res = http_request(handler, (char *)uri_next, &buffer);
 
-		if (http_res)
-			return 1;
+		if (http_res == -1)
+			return (-1);
 
 		parsed_json = json_tokener_parse(buffer);
 
 		if (parsed_json == NULL) {
 			fprintf(stderr, "Error occured while parsing JSON\n");
-			return 1;
+			return (-1);
 		}
 
 		json_object_object_get_ex(parsed_json, "error", &deezer_error);
@@ -121,7 +121,7 @@ get_json_data_array(CURL *handler, char *uri, json_object *item_list_array)
 			fprintf(stderr, "%s Deezer error:\n",
 					json_object_get_string(error_type));
 			fprintf(stderr, "  %s\n", json_object_get_string(error_message));
-			return 1;
+			return (-1);
 		}
 
 		json_object_object_get_ex(parsed_json, "next", &uri_next_obj);
@@ -139,7 +139,7 @@ get_json_data_array(CURL *handler, char *uri, json_object *item_list_array)
 		free(buffer);
 	}
 
-	return 0;
+	return (0);
 }
 
 size_t
@@ -152,7 +152,7 @@ deezer_callback(char *data, size_t size, size_t nmemb, struct http_data *userdat
 	memcpy(&data_ptr[userdata->size], data, realsize);
 	userdata->size += realsize;
 
-	return realsize;
+	return (realsize);
 }
 
 char *
@@ -165,7 +165,7 @@ uri_concat(char *path, char *token) {
 	strncat(uri, path, strlen(path));
 	uri_add_token(uri, token);
 
-	return uri;
+	return (uri);
 }
 
 void
@@ -185,15 +185,15 @@ write_json_to_file(json_object *json_data, char *filename)
 
 	if (json_file == NULL) {
 		fprintf(stderr, "File '%s' could not be opened", filename);
-		return 1;
+		return (-1);
 	}
 
 	if (ferror(json_file)) {
 		fprintf(stderr, "Error while writing to '%s'", filename);
-		return 1;
+		return (-1);
 	}
 
 	fprintf(json_file, "%s", json_data_string);
 
-	return 0;
+	return (0);
 }
