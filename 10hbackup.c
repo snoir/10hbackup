@@ -26,10 +26,14 @@ void
 uri_add_token(char *uri, char *token);
 
 int
+write_json_to_file(json_object *json_data, char *filename);
+
+int
 main(int argc, char *argv[])
 {
 	char token[255];
 	json_object *playlist_list_array = json_object_new_array();
+	int res = EXIT_SUCCESS;
 
 	if (argc < 2) {
 		fprintf(stderr, "Missing deezer token as argument\n");
@@ -42,12 +46,21 @@ main(int argc, char *argv[])
 	CURL *curl = curl_easy_init();
 
 	char *playlists_uri = uri_concat("/user/me/playlists", token);
-	get_json_data_array(curl, playlists_uri, playlist_list_array);
+	res = get_json_data_array(curl, playlists_uri, playlist_list_array);
+	if (res) {
+		goto cleanup;
+	}
 
+	res = write_json_to_file(playlist_list_array, "playlists.json");
+	if (res) {
+		goto cleanup;
+	}
+
+cleanup:
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
 
-	return EXIT_SUCCESS;
+	return res;
 }
 
 int
@@ -159,4 +172,28 @@ void
 uri_add_token(char *uri, char *token) {
 	strncat(uri, "?access_token=", strlen("?access_token="));
 	strncat(uri, token, strlen(token));
+}
+
+int
+write_json_to_file(json_object *json_data, char *filename)
+{
+	FILE *json_file;
+	const char *json_data_string;
+
+	json_data_string = json_object_to_json_string_ext(json_data, JSON_C_TO_STRING_PRETTY);
+	json_file = fopen(filename, "w+");
+
+	if (json_file == NULL) {
+		fprintf(stderr, "File '%s' could not be opened", filename);
+		return 1;
+	}
+
+	if (ferror(json_file)) {
+		fprintf(stderr, "Error while writing to '%s'", filename);
+		return 1;
+	}
+
+	fprintf(json_file, "%s", json_data_string);
+
+	return 0;
 }
