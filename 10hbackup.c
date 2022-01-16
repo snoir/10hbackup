@@ -2,6 +2,7 @@
 #include <json-c/json.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define BASE_DEEZER_URI "https://api.deezer.com"
 
@@ -31,15 +32,31 @@ write_json_to_file(json_object *json_data, char *filename);
 int
 main(int argc, char *argv[])
 {
-	char token[255];
 	json_object *playlist_list_array = json_object_new_array();
-	int res = EXIT_SUCCESS;
+	char token[255], output_dir[255] = "";
+	int res, ch;
 
-	if (argc < 2) {
-		fprintf(stderr, "Missing deezer token as argument\n");
-		return EXIT_FAILURE;
-	} else {
-		strncpy(token, argv[1], sizeof(token));
+	res = EXIT_SUCCESS;
+
+	while ((ch = getopt(argc, argv, "d:t:")) != -1) {
+		switch (ch) {
+		case 'd':
+		     strncpy(output_dir, optarg, sizeof(output_dir));
+		     break;
+		case 't':
+		     strncpy(token, optarg, sizeof(token));
+		     break;
+		case '?':
+		default:
+		     exit(EXIT_FAILURE);
+		}
+	}
+	argc -= optind;
+	argv += optind;
+
+	if (token[0] == '\0' || output_dir[0] == '\0') {
+		fprintf(stderr, "Both -t and -d options are mandatory\n");
+		exit(EXIT_FAILURE);
 	}
 
 	curl_global_init(CURL_GLOBAL_ALL);
