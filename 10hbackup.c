@@ -22,6 +22,9 @@ get_json_data_array(CURL *handler, char *token, json_object *item_list_array);
 char *
 uri_concat(char *path, char *token);
 
+void
+uri_add_token(char *uri, char *token);
+
 int
 main(int argc, char *argv[])
 {
@@ -147,8 +150,13 @@ uri_concat(char *path, char *token) {
 
 	strncpy(uri, BASE_DEEZER_URI, strlen(BASE_DEEZER_URI));
 	strncat(uri, path, strlen(path));
-	strncat(uri, "?access_token=", strlen("?access_token="));
-	strncat(uri, token, strlen(token));
+	uri_add_token(uri, token);
 
 	return uri;
+}
+
+void
+uri_add_token(char *uri, char *token) {
+	strncat(uri, "?access_token=", strlen("?access_token="));
+	strncat(uri, token, strlen(token));
 }
