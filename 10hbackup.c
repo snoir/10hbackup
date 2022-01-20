@@ -41,12 +41,12 @@ main(int argc, char *argv[])
 	while ((ch = getopt(argc, argv, "d:t:")) != -1) {
 		switch (ch) {
 		case 'd':
-			output_dir = malloc(sizeof(char) * strlen(optarg));
-			strncpy(output_dir, optarg, strlen(optarg));
+			output_dir = malloc(sizeof(char) * strlen(optarg) + 1);
+			strncpy(output_dir, optarg, strlen(optarg) + 1);
 			break;
 		case 't':
-			token = malloc(sizeof(char) * strlen(optarg));
-			strncpy(token, optarg, strlen(optarg));
+			token = malloc(sizeof(char) * strlen(optarg) + 1);
+			strncpy(token, optarg, strlen(optarg) + 1);
 			break;
 		case '?':
 		default:
@@ -78,6 +78,8 @@ main(int argc, char *argv[])
 cleanup:
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
+	free(token);
+	free(output_dir);
 
 	return (res);
 }
@@ -180,8 +182,8 @@ uri_concat(char *path, char *token) {
 		strlen("?access_token=") + strlen(token);
 	char *uri = malloc(sizeof(char) * (uri_size + 1));
 
-	strncpy(uri, BASE_DEEZER_URI, strlen(BASE_DEEZER_URI));
-	strncat(uri, path, strlen(path));
+	strncpy(uri, BASE_DEEZER_URI, strlen(BASE_DEEZER_URI) + 1);
+	strncat(uri, path, strlen(path) + 1);
 	uri_add_token(uri, token);
 
 	return (uri);
