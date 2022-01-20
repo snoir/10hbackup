@@ -33,7 +33,7 @@ int
 main(int argc, char *argv[])
 {
 	json_object *playlist_list_array = json_object_new_array();
-	char token[255], output_dir[255] = "";
+	char *token, *output_dir;
 	int res, ch;
 
 	res = EXIT_SUCCESS;
@@ -41,14 +41,16 @@ main(int argc, char *argv[])
 	while ((ch = getopt(argc, argv, "d:t:")) != -1) {
 		switch (ch) {
 		case 'd':
-		     strncpy(output_dir, optarg, sizeof(output_dir));
-		     break;
+			output_dir = malloc(sizeof(char) * strlen(optarg));
+			strncpy(output_dir, optarg, strlen(optarg));
+			break;
 		case 't':
-		     strncpy(token, optarg, sizeof(token));
-		     break;
+			token = malloc(sizeof(char) * strlen(optarg));
+			strncpy(token, optarg, strlen(optarg));
+			break;
 		case '?':
 		default:
-		     exit(EXIT_FAILURE);
+			exit(EXIT_FAILURE);
 		}
 	}
 	argc -= optind;
