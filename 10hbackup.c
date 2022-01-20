@@ -33,7 +33,7 @@ int
 main(int argc, char *argv[])
 {
 	json_object *playlist_list_array = json_object_new_array();
-	char *token = "", *output_dir = "";
+	char *token = NULL, *output_dir = NULL;
 	int res, ch;
 
 	res = EXIT_SUCCESS;
@@ -56,7 +56,7 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	if (token[0] == '\0' || output_dir[0] == '\0') {
+	if (token == NULL || output_dir == NULL) {
 		fprintf(stderr, "Both -t and -d options are mandatory\n");
 		exit(EXIT_FAILURE);
 	}
