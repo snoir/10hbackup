@@ -65,12 +65,16 @@ main(int argc, char *argv[])
 	CURL *curl = curl_easy_init();
 
 	char *playlists_uri = uri_concat("/user/me/playlists", token);
+	char *playlists_file_path = malloc(strlen(output_dir) +
+			strlen("playlists.json") + 2);
+	sprintf(playlists_file_path, "%s/%s", output_dir, "playlists.json");
+
 	res = get_json_data_array(curl, playlists_uri, playlist_list_array);
 	if (res == -1) {
 		goto cleanup;
 	}
 
-	res = write_json_to_file(playlist_list_array, "playlists.json");
+	res = write_json_to_file(playlist_list_array, playlists_file_path);
 	if (res == -1) {
 		goto cleanup;
 	}
