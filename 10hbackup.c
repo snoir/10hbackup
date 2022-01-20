@@ -71,11 +71,13 @@ main(int argc, char *argv[])
 
 	res = get_json_data_array(curl, playlists_uri, playlist_list_array);
 	if (res == -1) {
+		res = EXIT_FAILURE;
 		goto cleanup;
 	}
 
 	res = write_json_to_file(playlist_list_array, playlists_file_path);
 	if (res == -1) {
+		res = EXIT_FAILURE;
 		goto cleanup;
 	}
 
