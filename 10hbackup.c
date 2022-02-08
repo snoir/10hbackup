@@ -11,6 +11,11 @@ struct http_data {
 	char **data;
 };
 
+struct request_count {
+	int nb;
+	int ts;
+};
+
 size_t
 deezer_callback(char *data, size_t size, size_t nmemb, struct http_data *userdata);
 
@@ -18,7 +23,7 @@ int
 http_request(CURL *handler, char *uri, char **buffer);
 
 int
-get_json_data_array(CURL *handler, char *token, json_object *item_list_array);
+get_json_data_array(CURL *handler, char *token, json_object *item_list_array, struct request_count *requests_counting);
 
 char *
 uri_concat(char *path, char *token);
@@ -40,6 +45,7 @@ main(int argc, char *argv[])
 	const char *playlist_uri;
 	int res, ch, nb_playlists, playlist_id_str_len;
 	unsigned long int playlist_id;
+	struct request_count requests_counting;
 
 	res = EXIT_SUCCESS;
 
@@ -69,8 +75,10 @@ main(int argc, char *argv[])
 	curl_global_init(CURL_GLOBAL_ALL);
 	CURL *curl = curl_easy_init();
 
+	requests_counting.nb = 0;
+	requests_counting.ts = (int)time(NULL);
 	playlists_uri = uri_concat("/user/me/playlists", token);
-	res = get_json_data_array(curl, playlists_uri, playlist_list_array);
+	res = get_json_data_array(curl, playlists_uri, playlist_list_array, &requests_counting);
 	if (res == -1) {
 		res = EXIT_FAILURE;
 		goto cleanup;
@@ -94,7 +102,7 @@ main(int argc, char *argv[])
 				strlen(".json") + 2);
 		sprintf(file_path, "%s/%s%s", output_dir, playlist_id_str, ".json");
 
-		res = get_json_data_array(curl, playlist_full_uri, playlist_array);
+		res = get_json_data_array(curl, playlist_full_uri, playlist_array, &requests_counting);
 		if (res == -1) {
 			res = EXIT_FAILURE;
 			goto cleanup;
@@ -156,20 +164,27 @@ http_request(CURL *handler, char *uri, char **buffer)
 }
 
 int
-get_json_data_array(CURL *handler, char *uri, json_object *item_list_array)
+get_json_data_array(CURL *handler, char *uri, json_object *item_list_array, struct request_count *requests_counting)
 {
 	json_object *parsed_json;
 	json_object *uri_next_obj;
 	json_object *current_data_array;
 	json_object *deezer_error;
-	int http_res;
+	int http_res, ts_diff;
 	size_t nb_items;
 	char *buffer = malloc(1);
 	const char *uri_next = uri;
 
 	while (uri_next != NULL) {
 		buffer = malloc(1);
+		if (requests_counting->nb == 50) {
+			ts_diff = difftime((int)time(NULL), requests_counting->ts);
+			sleep(6 - ts_diff);
+			requests_counting->nb = 0;
+			requests_counting->ts = (int)time(NULL);
+		}
 		http_res = http_request(handler, (char *)uri_next, &buffer);
+		requests_counting->nb++;
 
 		if (http_res == -1)
 			return (-1);
