@@ -87,7 +87,7 @@ main(int argc, char *argv[])
 		playlist_full_uri = malloc(strlen(playlist_uri) + strlen(token) + 1);
 		strcpy(playlist_full_uri, playlist_uri);
 		uri_add_token(playlist_full_uri, token);
-		playlist_id_str_len = snprintf(NULL, 0, "%lu", playlist_id);
+		playlist_id_str_len = snprintf(NULL, 0, "%lu", playlist_id) + 1;
 		playlist_id_str = malloc(playlist_id_str_len + 1);
 		snprintf(playlist_id_str, playlist_id_str_len, "%lu", playlist_id);
 		file_path = malloc(strlen(output_dir) + playlist_id_str_len +
@@ -100,7 +100,7 @@ main(int argc, char *argv[])
 			goto cleanup;
 		}
 
-		res = write_json_to_file(playlist_list_array, file_path);
+		res = write_json_to_file(playlist_array, file_path);
 		if (res == -1) {
 			res = EXIT_FAILURE;
 			goto cleanup;
