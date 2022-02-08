@@ -156,10 +156,10 @@ http_request(CURL *handler, char *uri, char **buffer)
 int
 get_json_data_array(CURL *handler, char *uri, json_object *item_list_array)
 {
-	struct json_object *parsed_json;
-	struct json_object *uri_next_obj;
-	struct json_object *current_data_array;
-	struct json_object *deezer_error;
+	json_object *parsed_json;
+	json_object *uri_next_obj;
+	json_object *current_data_array;
+	json_object *deezer_error;
 	int http_res;
 	size_t nb_items;
 	char *buffer = malloc(1);
