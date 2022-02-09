@@ -262,6 +262,7 @@ write_json_to_file(json_object *json_data, char *filename)
 	}
 
 	fprintf(json_file, "%s", json_data_string);
+	fclose(json_file);
 
 	return (0);
 }
