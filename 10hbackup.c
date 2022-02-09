@@ -214,7 +214,7 @@ size_t
 deezer_callback(char *data, size_t size, size_t nmemb, struct http_data *userdata) {
 	int realsize = size * nmemb;
 
-	char *data_ptr = realloc(*userdata->data, userdata->size + realsize);
+	char *data_ptr = realloc(*userdata->data, userdata->size + realsize + 1);
 	*userdata->data = data_ptr;
 
 	memcpy(&data_ptr[userdata->size], data, realsize);
