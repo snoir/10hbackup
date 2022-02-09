@@ -150,6 +150,8 @@ http_request(CURL *handler, char *uri, char **buffer)
 		return (-1);
 	}
 
+	*(*buffer + data.size) = '\0';
+
 	return (0);
 }
 
