@@ -35,16 +35,13 @@ int
 write_json_to_file(json_object *json_data, char *filename);
 
 int
+get_playlists(CURL *curl, char *token, char *output_dir, struct request_count *requests_counting);
+
+int
 main(int argc, char *argv[])
 {
-	json_object *playlist_list_array = json_object_new_array();
-	json_object *playlist_array = json_object_new_array();
-	json_object *playlist_item, *playlist_uri_obj, *playlist_id_obj;
-	char *token = NULL, *output_dir = NULL, *file_path = NULL;
-	char *playlists_uri, *playlist_id_str, *playlist_full_uri;
-	const char *playlist_uri;
-	int res, ch, nb_playlists, playlist_id_str_len;
-	unsigned long int playlist_id;
+	char *token = NULL, *output_dir = NULL;
+	int res, ch;
 	struct request_count requests_counting;
 
 	res = EXIT_SUCCESS;
@@ -77,58 +74,9 @@ main(int argc, char *argv[])
 
 	requests_counting.nb = 0;
 	requests_counting.ts = (int)time(NULL);
-	playlists_uri = uri_concat("/user/me/playlists", token);
-	res = get_json_data_array(curl, playlists_uri, playlist_list_array, &requests_counting);
-	if (res == -1) {
-		res = EXIT_FAILURE;
-		goto cleanup;
-	}
 
-	nb_playlists = json_object_array_length(playlist_list_array);
+	res = get_playlists(curl, token, output_dir, &requests_counting);
 
-	for (int i = 0; i < nb_playlists; i++) {
-		playlist_item = json_object_array_get_idx(playlist_list_array, i);
-		json_object_object_get_ex(playlist_item, "id", &playlist_id_obj);
-		json_object_object_get_ex(playlist_item, "tracklist", &playlist_uri_obj);
-		playlist_id = json_object_get_uint64(playlist_id_obj);
-		playlist_uri = json_object_get_string(playlist_uri_obj);
-		playlist_full_uri = malloc(strlen(playlist_uri) + strlen(token) + 1);
-		strcpy(playlist_full_uri, playlist_uri);
-		uri_add_token(playlist_full_uri, token);
-		playlist_id_str_len = snprintf(NULL, 0, "%lu", playlist_id) + 1;
-		playlist_id_str = malloc(playlist_id_str_len + 1);
-		snprintf(playlist_id_str, playlist_id_str_len, "%lu", playlist_id);
-		file_path = malloc(strlen(output_dir) + playlist_id_str_len +
-				strlen(".json") + 2);
-		sprintf(file_path, "%s/%s%s", output_dir, playlist_id_str, ".json");
-
-		res = get_json_data_array(curl, playlist_full_uri, playlist_array, &requests_counting);
-		if (res == -1) {
-			res = EXIT_FAILURE;
-			goto cleanup;
-		}
-
-		res = write_json_to_file(playlist_array, file_path);
-		if (res == -1) {
-			res = EXIT_FAILURE;
-			goto cleanup;
-		}
-
-		free(playlist_full_uri);
-		free(file_path);
-	}
-
-	file_path = malloc(strlen(output_dir) +
-			strlen("playlists.json") + 2);
-	sprintf(file_path, "%s/%s", output_dir, "playlists.json");
-
-	res = write_json_to_file(playlist_list_array, file_path);
-	if (res == -1) {
-		res = EXIT_FAILURE;
-		goto cleanup;
-	}
-
-cleanup:
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
 	free(token);
@@ -280,4 +228,65 @@ write_json_to_file(json_object *json_data, char *filename)
 	fclose(json_file);
 
 	return (0);
+}
+
+int
+get_playlists(CURL *curl, char *token, char *output_dir, struct request_count *requests_counting)
+{
+	json_object *playlist_list_array = json_object_new_array();
+	json_object *playlist_array = json_object_new_array();
+	json_object *playlist_item, *playlist_uri_obj, *playlist_id_obj;
+	char *file_path, *playlists_uri, *playlist_id_str, *playlist_full_uri;
+	const char *playlist_uri;
+	int res, nb_playlists, playlist_id_str_len;
+	unsigned long int playlist_id;
+
+	playlists_uri = uri_concat("/user/me/playlists", token);
+	res = get_json_data_array(curl, playlists_uri, playlist_list_array, requests_counting);
+	if (res == -1) {
+		return (-1);
+	}
+
+	nb_playlists = json_object_array_length(playlist_list_array);
+
+	for (int i = 0; i < nb_playlists; i++) {
+		playlist_item = json_object_array_get_idx(playlist_list_array, i);
+		json_object_object_get_ex(playlist_item, "id", &playlist_id_obj);
+		json_object_object_get_ex(playlist_item, "tracklist", &playlist_uri_obj);
+		playlist_id = json_object_get_uint64(playlist_id_obj);
+		playlist_uri = json_object_get_string(playlist_uri_obj);
+		playlist_full_uri = malloc(strlen(playlist_uri) + strlen(token) + 1);
+		strcpy(playlist_full_uri, playlist_uri);
+		uri_add_token(playlist_full_uri, token);
+		playlist_id_str_len = snprintf(NULL, 0, "%lu", playlist_id) + 1;
+		playlist_id_str = malloc(playlist_id_str_len + 1);
+		snprintf(playlist_id_str, playlist_id_str_len, "%lu", playlist_id);
+		file_path = malloc(strlen(output_dir) + playlist_id_str_len +
+				strlen(".json") + 2);
+		sprintf(file_path, "%s/%s%s", output_dir, playlist_id_str, ".json");
+
+		res = get_json_data_array(curl, playlist_full_uri, playlist_array, requests_counting);
+		if (res == -1) {
+			return (-1);
+		}
+
+		res = write_json_to_file(playlist_array, file_path);
+		if (res == -1) {
+			return (-1);
+		}
+
+		free(playlist_full_uri);
+		free(file_path);
+	}
+
+	file_path = malloc(strlen(output_dir) +
+			strlen("playlists.json") + 2);
+	sprintf(file_path, "%s/%s", output_dir, "playlists.json");
+
+	res = write_json_to_file(playlist_list_array, file_path);
+	if (res == -1) {
+		return (-1);
+	}
+
+	return 0;
 }
