@@ -2,6 +2,7 @@
 #include <json-c/json.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #define BASE_DEEZER_URI "https://api.deezer.com"
@@ -237,15 +238,19 @@ get_playlists(CURL *curl, char *token, char *output_dir, struct request_count *r
 	json_object *playlist_array = json_object_new_array();
 	json_object *playlist_item, *playlist_uri_obj, *playlist_id_obj;
 	char *file_path, *playlists_uri, *playlist_id_str, *playlist_full_uri;
+	char playlists_output_dir[strlen(output_dir) + strlen("playlists") + 2];
 	const char *playlist_uri;
 	int res, nb_playlists, playlist_id_str_len;
 	unsigned long int playlist_id;
 
 	playlists_uri = uri_concat("/user/me/playlists", token);
+	sprintf(playlists_output_dir, "%s/%s", output_dir, "playlists");
 	res = get_json_data_array(curl, playlists_uri, playlist_list_array, requests_counting);
 	if (res == -1) {
 		return (-1);
 	}
+
+	res = mkdir(playlists_output_dir, 0755);
 
 	nb_playlists = json_object_array_length(playlist_list_array);
 
@@ -261,9 +266,9 @@ get_playlists(CURL *curl, char *token, char *output_dir, struct request_count *r
 		playlist_id_str_len = snprintf(NULL, 0, "%lu", playlist_id) + 1;
 		playlist_id_str = malloc(playlist_id_str_len + 1);
 		snprintf(playlist_id_str, playlist_id_str_len, "%lu", playlist_id);
-		file_path = malloc(strlen(output_dir) + playlist_id_str_len +
+		file_path = malloc(strlen(playlists_output_dir) + playlist_id_str_len +
 				strlen(".json") + 2);
-		sprintf(file_path, "%s/%s%s", output_dir, playlist_id_str, ".json");
+		sprintf(file_path, "%s/%s%s", playlists_output_dir, playlist_id_str, ".json");
 
 		res = get_json_data_array(curl, playlist_full_uri, playlist_array, requests_counting);
 		if (res == -1) {
