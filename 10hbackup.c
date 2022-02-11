@@ -42,6 +42,7 @@ int
 main(int argc, char *argv[])
 {
 	char *token = NULL, *output_dir = NULL;
+	char *categories[] = {"albums", "artists", "playlists"};
 	int res, ch;
 	struct request_count requests_counting;
 
@@ -76,7 +77,9 @@ main(int argc, char *argv[])
 	requests_counting.nb = 0;
 	requests_counting.ts = (int)time(NULL);
 
-	res = get_category("playlists", curl, token, output_dir, &requests_counting);
+	for (int i = 0; i < (int)(sizeof(categories) / sizeof(categories[0])); i++) {
+		res = get_category(categories[i], curl, token, output_dir, &requests_counting);
+	}
 
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
@@ -284,6 +287,7 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 		}
 
 		free(item_full_uri);
+		free(item_id_str);
 		free(file_path);
 	}
 
