@@ -124,7 +124,7 @@ get_json_data_array(CURL *handler, char *uri, json_object *item_list_array, stru
 	json_object *deezer_error;
 	int http_res, ts_diff;
 	size_t nb_items;
-	char *buffer = malloc(1);
+	char *buffer;
 	const char *uri_next = uri;
 
 	while (uri_next != NULL) {
