@@ -156,7 +156,13 @@ get_json_data_array(CURL *handler, char *uri, json_object *item_list_array, stru
 			fprintf(stderr, "%s Deezer error:\n",
 					json_object_get_string(error_type));
 			fprintf(stderr, "  %s\n", json_object_get_string(error_message));
-			return (-1);
+			fprintf(stderr, "  uri: %s\n", uri);
+
+			if (strcmp(json_object_get_string(error_type), "DataException") == 0) {
+				return (0);
+			} else {
+				return (-1);
+			}
 		}
 
 		json_object_object_get_ex(parsed_json, "next", &uri_next_obj);
