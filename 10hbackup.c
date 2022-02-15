@@ -156,10 +156,9 @@ get_json_data_array(CURL *handler, char *uri, json_object *item_list_array, stru
 			fprintf(stderr, "%s Deezer error:\n",
 					json_object_get_string(error_type));
 			fprintf(stderr, "  %s\n", json_object_get_string(error_message));
-			fprintf(stderr, "  uri: %s\n", uri);
 
 			if (strcmp(json_object_get_string(error_type), "DataException") == 0) {
-				return (0);
+				return (1);
 			} else {
 				return (-1);
 			}
@@ -282,9 +281,15 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 				strlen(".json") + 2);
 		sprintf(file_path, "%s/%s%s", category_output_dir, item_id_str, ".json");
 
+		fprintf(stdout, "[%s] fetching item '%s'\n", category, item_id_str);
 		res = get_json_data_array(curl, item_full_uri, category_item_array, requests_counting);
 		if (res == -1) {
 			return (-1);
+		}
+
+		/* No data */
+		if (res == 1) {
+			continue;
 		}
 
 		res = write_json_to_file(category_item_array, file_path);
