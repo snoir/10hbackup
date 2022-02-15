@@ -266,7 +266,7 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 		json_object_object_get_ex(item, "tracklist", &item_uri_obj);
 		item_id = json_object_get_uint64(item_id_obj);
 		item_uri = json_object_get_string(item_uri_obj);
-		item_full_uri = malloc(strlen(item_uri) + strlen(token) + 1);
+		item_full_uri = malloc(strlen(item_uri) + strlen("?access_token=") + strlen(token) + 1);
 		strcpy(item_full_uri, item_uri);
 		uri_add_token(item_full_uri, token);
 		item_id_str_len = snprintf(NULL, 0, "%lu", item_id) + 1;
