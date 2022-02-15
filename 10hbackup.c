@@ -131,7 +131,9 @@ get_json_data_array(CURL *handler, char *uri, json_object *item_list_array, stru
 		buffer = malloc(1);
 		if (requests_counting->nb == 50) {
 			ts_diff = difftime((int)time(NULL), requests_counting->ts);
-			sleep(6 - ts_diff);
+			if (ts_diff < 6)
+				sleep(6 - ts_diff);
+
 			requests_counting->nb = 0;
 			requests_counting->ts = (int)time(NULL);
 		}
@@ -281,7 +283,7 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 				strlen(".json") + 2);
 		sprintf(file_path, "%s/%s%s", category_output_dir, item_id_str, ".json");
 
-		fprintf(stdout, "[%s] fetching item '%s'\n", category, item_id_str);
+		fprintf(stdout, "[%s] Fetching item '%s'\n", category, item_id_str);
 		res = get_json_data_array(curl, item_full_uri, category_item_array, requests_counting);
 		if (res == -1) {
 			return (-1);
