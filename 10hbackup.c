@@ -29,7 +29,7 @@ get_json_data_array(CURL *handler, char *token, json_object *item_list_array, st
 char *
 uri_concat(char *path, char *token);
 
-void
+char *
 uri_add_token(char *uri, char *token);
 
 int
@@ -199,21 +199,28 @@ deezer_callback(char *data, size_t size, size_t nmemb, struct http_data *userdat
 
 char *
 uri_concat(char *path, char *token) {
-	int uri_size = strlen(BASE_DEEZER_URI) + strlen(path) +
-		strlen("?access_token=") + strlen(token);
+	int uri_size = strlen(BASE_DEEZER_URI) + strlen(path);
 	char *uri = malloc(sizeof(char) * (uri_size + 1));
+	char *full_uri;
 
 	strncpy(uri, BASE_DEEZER_URI, strlen(BASE_DEEZER_URI) + 1);
 	strncat(uri, path, strlen(path) + 1);
-	uri_add_token(uri, token);
+	full_uri = uri_add_token(uri, token);
 
-	return (uri);
+	return (full_uri);
 }
 
-void
+char *
 uri_add_token(char *uri, char *token) {
-	strncat(uri, "?access_token=", strlen("?access_token="));
-	strncat(uri, token, strlen(token));
+	int full_uri_size = strlen(uri) + strlen(token) +
+		strlen("?access_token=");
+	char *full_uri = malloc(sizeof(char) * (full_uri_size +1));
+
+	strncpy(full_uri, uri, strlen(uri) + 1);
+	strncat(full_uri, "?access_token=", strlen("?access_token=") + 1);
+	strncat(full_uri, token, strlen(token) + 1);
+
+	return (full_uri);
 }
 
 int
@@ -273,9 +280,7 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 		json_object_object_get_ex(item, "tracklist", &item_uri_obj);
 		item_id = json_object_get_uint64(item_id_obj);
 		item_uri = json_object_get_string(item_uri_obj);
-		item_full_uri = malloc(strlen(item_uri) + strlen("?access_token=") + strlen(token) + 1);
-		strcpy(item_full_uri, item_uri);
-		uri_add_token(item_full_uri, token);
+		item_full_uri = uri_add_token((char *)item_uri, token);
 		item_id_str_len = snprintf(NULL, 0, "%lu", item_id) + 1;
 		item_id_str = malloc(item_id_str_len + 1);
 		snprintf(item_id_str, item_id_str_len, "%lu", item_id);
