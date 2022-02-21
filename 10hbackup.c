@@ -250,7 +250,7 @@ int
 get_category(char* category, CURL *curl, char *token, char *output_dir, struct request_count *requests_counting)
 {
 	json_object *category_item_list_array = json_object_new_array();
-	json_object *category_item_array = json_object_new_array();
+	json_object *category_item_array;
 	json_object *item, *item_uri_obj, *item_id_obj;
 	char *file_path, *category_uri, *item_id_str, *item_full_uri;
 	char category_output_dir[strlen(output_dir) + strlen(category) + 2];
@@ -274,6 +274,7 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 	nb_items = json_object_array_length(category_item_list_array);
 
 	for (int i = 0; i < nb_items; i++) {
+		category_item_array = json_object_new_array();
 		item = json_object_array_get_idx(category_item_list_array, i);
 		json_object_object_get_ex(item, "id", &item_id_obj);
 		json_object_object_get_ex(item, "tracklist", &item_uri_obj);
