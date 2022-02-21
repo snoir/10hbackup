@@ -43,10 +43,8 @@ main(int argc, char *argv[])
 {
 	char *token = NULL, *output_dir = NULL;
 	char *categories[] = {"albums", "playlists"};
-	int res, ch;
+	int res = EXIT_SUCCESS, ch;
 	struct request_count requests_counting;
-
-	res = EXIT_SUCCESS;
 
 	while ((ch = getopt(argc, argv, "d:t:")) != -1) {
 		switch (ch) {
