@@ -21,3 +21,6 @@ Deezer Rest API is used to achieve that.
 
 - Read the Deezer token from a file
 - Store data in a Git repository (using libgit2)
+- Add the possibility to only download the "index" of a category (for example,
+  we might want to have the liked artist list but without the JSON containing
+  all of its tracks)
