@@ -258,13 +258,14 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 	char category_output_dir[strlen(output_dir) + strlen(category) + 2];
 	char category_path[strlen("/user/me/") + strlen(category)];
 	const char *item_uri;
-	int res, nb_items, item_id_str_len;
+	int res, nb_items, item_id_str_len, file_path_len;
 	unsigned long int item_id;
 
 	strncpy(category_path, "/user/me/", strlen("/user/me/") + 1);
 	strncat(category_path, category, strlen(category) + 1);
 	category_uri = uri_concat(category_path, token);
-	sprintf(category_output_dir, "%s/%s", output_dir, category);
+	snprintf(category_output_dir, strlen(output_dir) + strlen(category) + 2,
+			"%s/%s", output_dir, category);
 	res = get_json_data_array(curl, category_uri, category_item_list_array, requests_counting);
 	if (res == -1) {
 		return (-1);
@@ -284,9 +285,10 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 		item_id_str_len = snprintf(NULL, 0, "%lu", item_id) + 1;
 		item_id_str = malloc(item_id_str_len + 1);
 		snprintf(item_id_str, item_id_str_len, "%lu", item_id);
-		file_path = malloc(strlen(category_output_dir) + item_id_str_len +
-				strlen(".json") + 2);
-		sprintf(file_path, "%s/%s%s", category_output_dir, item_id_str, ".json");
+		file_path_len = strlen(category_output_dir) + item_id_str_len +
+			strlen(".json") + 2;
+		file_path = malloc(file_path_len);
+		snprintf(file_path, file_path_len, "%s/%s%s", category_output_dir, item_id_str, ".json");
 
 		fprintf(stdout, "[%s] Fetching item '%s'\n", category, item_id_str);
 		res = get_json_data_array(curl, item_full_uri, category_item_array, requests_counting);
@@ -311,7 +313,8 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 
 	file_path = malloc(strlen(output_dir) + strlen(category) +
 			strlen(".json") + 2);
-	sprintf(file_path, "%s/%s.%s", output_dir, category, "json");
+	snprintf(file_path, strlen(output_dir) + strlen(category) + strlen("json") + 3,
+			"%s/%s.%s", output_dir, category, "json");
 
 	res = write_json_to_file(category_item_list_array, file_path);
 	if (res == -1) {
