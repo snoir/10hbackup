@@ -1,7 +1,9 @@
 #include <curl/curl.h>
+#include <git2.h>
 #include <json-c/json.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -43,8 +45,10 @@ main(int argc, char *argv[])
 {
 	char *token = NULL, *output_dir = NULL;
 	char *categories[] = {"albums", "playlists"};
-	int res = EXIT_SUCCESS, ch;
+	int res = EXIT_SUCCESS, git_res = EXIT_SUCCESS, ch;
 	struct request_count requests_counting;
+	git_repository *repo = NULL;
+	git_index *idx = NULL;
 
 	while ((ch = getopt(argc, argv, "d:t:")) != -1) {
 		switch (ch) {
@@ -70,17 +74,88 @@ main(int argc, char *argv[])
 	}
 
 	curl_global_init(CURL_GLOBAL_ALL);
+	git_libgit2_init();
 	CURL *curl = curl_easy_init();
+
+	if (git_repository_open_ext(
+	    NULL, output_dir, GIT_REPOSITORY_OPEN_NO_SEARCH, NULL) == 0) {
+		git_res = git_repository_open(&repo, output_dir);
+	} else {
+		git_res = git_repository_init(&repo, output_dir, false);
+	}
+
+	if (git_res < 0) {
+		goto cleanup;
+	}
 
 	requests_counting.nb = 0;
 	requests_counting.ts = (int)time(NULL);
 
-	for (int i = 0; i < (int)(sizeof(categories) / sizeof(categories[0])); i++) {
-		res = get_category(categories[i], curl, token, output_dir, &requests_counting);
+	//for (int i = 0; i < (int)(sizeof(categories) / sizeof(categories[0])); i++) {
+	//	res = get_category(categories[i], curl, token, output_dir, &requests_counting);
+	//}
+
+	git_oid new_tree_id, new_commit_id;
+	git_tree *tree = NULL;
+	char *git_path[] = {"."};
+	git_strarray git_arr = {git_path, 1};
+	git_signature *me = NULL;
+
+	git_res = git_signature_now(&me, "Me", "me@example.com");
+
+	if (git_res < 0) {
+		goto cleanup;
+	}
+
+	git_res = git_repository_index(&idx, repo);
+
+	if (git_res < 0) {
+		goto cleanup;
+	}
+
+	git_res = git_index_add_all(idx, &git_arr, 0, NULL, 0);
+	if (git_res < 0) {
+		goto cleanup;
+	}
+
+	git_res = git_index_write(idx);
+	if (git_res < 0) {
+		goto cleanup;
+	}
+
+	git_res = git_index_write_tree(&new_tree_id, idx);
+	if (git_res < 0) {
+		goto cleanup;
+	}
+
+	git_res = git_tree_lookup(&tree, repo, &new_tree_id);
+	if (git_res < 0) {
+		goto cleanup;
+	}
+
+	git_res = git_commit_create_v(
+			&new_commit_id,
+			repo,
+			"HEAD",                      /* name of ref to update */
+			me,                          /* author */
+			me,                          /* committer */
+			"UTF-8",                     /* message encoding */
+			"Flooberhaul the whatnots",  /* message */
+			tree,                        /* root tree */
+			0);                           /* parent count */
+
+cleanup:
+	if (git_res < 0) {
+		const git_error *e = git_error_last();
+		printf("Git error %d/%d:\n", res, e->klass);
+		printf("  %s\n", e->message);
+		res = git_res;
 	}
 
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
+	git_repository_free(repo);
+	git_libgit2_shutdown();
 	free(token);
 	free(output_dir);
 
