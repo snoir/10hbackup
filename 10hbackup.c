@@ -42,7 +42,7 @@ int
 main(int argc, char *argv[])
 {
 	char *token = NULL, *output_dir = NULL;
-	char *categories[] = {"albums", "artists", "playlists"};
+	char *categories[] = {"albums", "playlists"};
 	int res, ch;
 	struct request_count requests_counting;
 
