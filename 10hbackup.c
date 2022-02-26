@@ -347,7 +347,7 @@ git_add_and_commit(char *output_dir) {
 		git_res = git_repository_init(&repo, output_dir, false);
 	}
 
-	if (git_res < 0) {
+	if (git_res != 0) {
 		goto cleanup;
 	}
 
@@ -360,39 +360,39 @@ git_add_and_commit(char *output_dir) {
 	git_reference *ref = NULL;
 
 	git_res = git_signature_now(&me, "Me", "me@example.com");
-	if (git_res < 0) {
+	if (git_res != 0) {
 		goto cleanup;
 	}
 
 	git_res = git_revparse_ext(&parent, &ref, repo, "HEAD");
 	if (git_res == GIT_ENOTFOUND) {
 		git_res = 0;
-	} else if (git_res < 0) {
+	} else if (git_res != 0) {
 		goto cleanup;
 	}
 
 	git_res = git_repository_index(&idx, repo);
-	if (git_res < 0) {
+	if (git_res != 0) {
 		goto cleanup;
 	}
 
 	git_res = git_index_add_all(idx, &git_arr, 0, NULL, 0);
-	if (git_res < 0) {
+	if (git_res != 0) {
 		goto cleanup;
 	}
 
 	git_res = git_index_write(idx);
-	if (git_res < 0) {
+	if (git_res != 0) {
 		goto cleanup;
 	}
 
 	git_res = git_index_write_tree(&new_tree_id, idx);
-	if (git_res < 0) {
+	if (git_res != 0) {
 		goto cleanup;
 	}
 
 	git_res = git_tree_lookup(&tree, repo, &new_tree_id);
-	if (git_res < 0) {
+	if (git_res != 0) {
 		goto cleanup;
 	}
 	timestamp = time(NULL);
@@ -411,10 +411,10 @@ git_add_and_commit(char *output_dir) {
 			parent ? 1 : 0, parent);
 
 cleanup:
-	if (git_res < 0) {
+	if (git_res != 0) {
 		const git_error *e = git_error_last();
-		printf("Git error %d/%d:\n", res, e->klass);
-		printf("  %s\n", e->message);
+		fprintf(stderr, "Git error %d/%d:\n", res, e->klass);
+		fprintf(stderr, "  %s\n", e->message);
 		res = -1;
 	}
 
