@@ -334,9 +334,16 @@ int
 git_add_and_commit(char *output_dir) {
 	int res = 0, git_res = 0;
 	char commit_message[50], date_rfc2822[32];
+	char *git_path[] = {"."};
+	time_t timestamp;
 	git_repository *repo = NULL;
 	git_index *idx = NULL;
-	time_t timestamp;
+	git_oid new_tree_id, new_commit_id;
+	git_tree *tree = NULL;
+	git_strarray git_arr = {git_path, 1};
+	git_signature *me = NULL;
+	git_object *parent = NULL;
+	git_reference *ref = NULL;
 
 	git_libgit2_init();
 
@@ -350,14 +357,6 @@ git_add_and_commit(char *output_dir) {
 	if (git_res != 0) {
 		goto cleanup;
 	}
-
-	git_oid new_tree_id, new_commit_id;
-	git_tree *tree = NULL;
-	char *git_path[] = {"."};
-	git_strarray git_arr = {git_path, 1};
-	git_signature *me = NULL;
-	git_object *parent = NULL;
-	git_reference *ref = NULL;
 
 	git_res = git_signature_now(&me, "Me", "me@example.com");
 	if (git_res != 0) {
