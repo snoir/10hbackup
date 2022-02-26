@@ -100,15 +100,22 @@ main(int argc, char *argv[])
 	char *git_path[] = {"."};
 	git_strarray git_arr = {git_path, 1};
 	git_signature *me = NULL;
+	git_object *parent = NULL;
+	git_reference *ref = NULL;
 
 	git_res = git_signature_now(&me, "Me", "me@example.com");
-
 	if (git_res < 0) {
 		goto cleanup;
 	}
 
-	git_res = git_repository_index(&idx, repo);
+	git_res = git_revparse_ext(&parent, &ref, repo, "HEAD");
+	if (git_res == GIT_ENOTFOUND) {
+		git_res = 0;
+	} else if (git_res < 0) {
+		goto cleanup;
+	}
 
+	git_res = git_repository_index(&idx, repo);
 	if (git_res < 0) {
 		goto cleanup;
 	}
@@ -136,13 +143,13 @@ main(int argc, char *argv[])
 	git_res = git_commit_create_v(
 			&new_commit_id,
 			repo,
-			"HEAD",                      /* name of ref to update */
-			me,                          /* author */
-			me,                          /* committer */
-			"UTF-8",                     /* message encoding */
-			"Flooberhaul the whatnots",  /* message */
-			tree,                        /* root tree */
-			0);                           /* parent count */
+			"HEAD",
+			me,
+			me,
+			"UTF-8",
+			"New Deezer Data",
+			tree,
+			parent ? 1 : 0, parent);
 
 cleanup:
 	if (git_res < 0) {
