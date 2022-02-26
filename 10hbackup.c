@@ -44,9 +44,11 @@ int
 main(int argc, char *argv[])
 {
 	char *token = NULL, *output_dir = NULL;
+	char commit_message[50], date_rfc2822[32];
 	char *categories[] = {"albums", "playlists"};
 	int res = EXIT_SUCCESS, git_res = EXIT_SUCCESS, ch;
 	struct request_count requests_counting;
+	time_t timestamp;
 	git_repository *repo = NULL;
 	git_index *idx = NULL;
 
@@ -91,9 +93,9 @@ main(int argc, char *argv[])
 	requests_counting.nb = 0;
 	requests_counting.ts = (int)time(NULL);
 
-	//for (int i = 0; i < (int)(sizeof(categories) / sizeof(categories[0])); i++) {
-	//	res = get_category(categories[i], curl, token, output_dir, &requests_counting);
-	//}
+	for (int i = 0; i < (int)(sizeof(categories) / sizeof(categories[0])); i++) {
+		res = get_category(categories[i], curl, token, output_dir, &requests_counting);
+	}
 
 	git_oid new_tree_id, new_commit_id;
 	git_tree *tree = NULL;
@@ -139,6 +141,9 @@ main(int argc, char *argv[])
 	if (git_res < 0) {
 		goto cleanup;
 	}
+	timestamp = time(NULL);
+	strftime(date_rfc2822, 32, "%a, %d %b %Y %T %z", localtime(&timestamp));
+	snprintf(commit_message, 50, "Deezer export at %s", date_rfc2822);
 
 	git_res = git_commit_create_v(
 			&new_commit_id,
@@ -147,7 +152,7 @@ main(int argc, char *argv[])
 			me,
 			me,
 			"UTF-8",
-			"New Deezer Data",
+			commit_message,
 			tree,
 			parent ? 1 : 0, parent);
 
