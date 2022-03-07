@@ -165,8 +165,10 @@ get_json_data_array(CURL *handler, char *uri, json_object *item_list_array, stru
 			fprintf(stderr, "  %s\n", json_object_get_string(error_message));
 
 			if (strcmp(json_object_get_string(error_type), "DataException") == 0) {
+				free(buffer);
 				return (1);
 			} else {
+				free(buffer);
 				return (-1);
 			}
 		}
@@ -211,6 +213,8 @@ uri_concat(char *path, char *token) {
 	strncpy(uri, BASE_DEEZER_URI, strlen(BASE_DEEZER_URI) + 1);
 	strncat(uri, path, strlen(path) + 1);
 	full_uri = uri_add_token(uri, token);
+
+	free(uri);
 
 	return (full_uri);
 }
@@ -277,6 +281,7 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 	}
 
 	res = mkdir(category_output_dir, 0755);
+	free(category_uri);
 
 	nb_items = json_object_array_length(category_item_list_array);
 
@@ -304,6 +309,9 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 
 		/* No data */
 		if (res == 1) {
+			free(item_full_uri);
+			free(item_id_str);
+			free(file_path);
 			continue;
 		}
 
@@ -323,6 +331,7 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 			"%s/%s.%s", output_dir, category, "json");
 
 	res = write_json_to_file(category_item_list_array, file_path);
+	free(file_path);
 	if (res == -1) {
 		return (-1);
 	}
