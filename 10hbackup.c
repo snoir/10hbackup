@@ -261,7 +261,7 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 	json_object *item, *item_uri_obj, *item_id_obj;
 	char *file_path, *category_uri, *item_id_str, *item_full_uri;
 	char category_output_dir[strlen(output_dir) + strlen(category) + 2];
-	char category_path[strlen("/user/me/") + strlen(category)];
+	char category_path[strlen("/user/me/") + strlen(category) + 1];
 	const char *item_uri;
 	int res, nb_items, item_id_str_len, file_path_len;
 	unsigned long int item_id;
