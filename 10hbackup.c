@@ -188,6 +188,8 @@ get_json_data_array(CURL *handler, char *uri, json_object *item_list_array, stru
 		free(buffer);
 	}
 
+	json_object_put(parsed_json);
+
 	return (0);
 }
 
@@ -308,7 +310,9 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 		}
 
 		/* No data */
+		/* TODO: remove code duplication */
 		if (res == 1) {
+			json_object_put(category_item_array);
 			free(item_full_uri);
 			free(item_id_str);
 			free(file_path);
@@ -320,6 +324,7 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 			return (-1);
 		}
 
+		json_object_put(category_item_array);
 		free(item_full_uri);
 		free(item_id_str);
 		free(file_path);
@@ -331,7 +336,9 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 			"%s/%s.%s", output_dir, category, "json");
 
 	res = write_json_to_file(category_item_list_array, file_path);
+
 	free(file_path);
+	json_object_put(category_item_list_array);
 	if (res == -1) {
 		return (-1);
 	}
