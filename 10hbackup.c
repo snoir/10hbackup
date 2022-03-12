@@ -433,6 +433,11 @@ cleanup:
 		res = -1;
 	}
 
+	git_signature_free(me);
+	git_object_free(parent);
+	git_reference_free(ref);
+	git_tree_free(tree);
+	git_index_free(idx);
 	git_repository_free(repo);
 	git_libgit2_shutdown();
 
