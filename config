@@ -1,0 +1,4 @@
+token=mytoken
+output_dir=/home/user/my/dir
+git_name=John Doe
+git_email=me@example.com
