@@ -11,13 +11,18 @@ typedef struct {
 int
 read_config(char *path, config_key_value **config);
 
+char *
+get_conf(config_key_value *config, int config_size, char *key);
+
 int
 main() {
 	int config_size;
+	char *output_dir, *value;
 	config_key_value *config;
 
 	config_size = read_config("config", &config);
-	printf("%d", config_size);
+
+	value = get_conf(config, config_size, "output_dir");
 }
 
 int
@@ -49,4 +54,18 @@ read_config(char *path, config_key_value **config) {
 	}
 
 	return (nb_elem);
+}
+
+char *
+get_conf(config_key_value *config, int config_size, char *key) {
+	int config_key_size = strlen(key);
+	char *res = NULL;
+
+	for (int i = 0; i < config_size; i++) {
+		if (strncmp(config[i].key, key, config_key_size) == 0) {
+			res = config[i].value;
+		}
+	}
+
+	return res;
 }
