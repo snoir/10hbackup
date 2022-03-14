@@ -2,28 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-typedef struct {
-	char *key;
-	char *value;
-} config_key_value;
-
-int
-read_config(char *path, config_key_value **config);
-
-char *
-get_conf(config_key_value *config, int config_size, char *key);
-
-int
-main() {
-	int config_size;
-	char *output_dir, *value;
-	config_key_value *config;
-
-	config_size = read_config("config", &config);
-
-	value = get_conf(config, config_size, "output_dir");
-}
+#include "10hbackup_config.h"
 
 int
 read_config(char *path, config_key_value **config) {

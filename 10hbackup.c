@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "10hbackup_config.h"
 
 #define BASE_DEEZER_URI "https://api.deezer.com"
 
@@ -46,20 +47,17 @@ git_add_and_commit(char *output_dir);
 int
 main(int argc, char *argv[])
 {
-	char *token = NULL, *output_dir = NULL;
+	char *token = NULL, *output_dir = NULL, *config_file = NULL;
 	char *categories[] = {"albums", "playlists"};
-	int res = EXIT_SUCCESS, ch;
+	int res = EXIT_SUCCESS, ch, config_size;
 	struct request_count requests_counting;
+	config_key_value *config;
 
-	while ((ch = getopt(argc, argv, "d:t:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:")) != -1) {
 		switch (ch) {
-		case 'd':
-			output_dir = malloc(sizeof(char) * strlen(optarg) + 1);
-			strncpy(output_dir, optarg, strlen(optarg) + 1);
-			break;
-		case 't':
-			token = malloc(sizeof(char) * strlen(optarg) + 1);
-			strncpy(token, optarg, strlen(optarg) + 1);
+		case 'c':
+			config_file = malloc(sizeof(char) * strlen(optarg) + 1);
+			strncpy(config_file, optarg, strlen(optarg) + 1);
 			break;
 		case '?':
 		default:
@@ -69,10 +67,9 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	if (token == NULL || output_dir == NULL) {
-		fprintf(stderr, "Both -t and -d options are mandatory\n");
-		exit(EXIT_FAILURE);
-	}
+	config_size = read_config(config_file, &config);
+	output_dir = get_conf(config, config_size, "output_dir");
+	token = get_conf(config, config_size, "token");
 
 	curl_global_init(CURL_GLOBAL_ALL);
 	CURL *curl = curl_easy_init();
