@@ -1,7 +1,7 @@
 all: debug
 
 debug:
-	clang -g -Wall -Wextra -Werror -fsanitize=address -o 10hbackup 10hbackup.c \
+	clang -g -Wall -Wextra -Werror -fsanitize=address -o 10hbackup 10hbackup.c 10hbackup_config.c \
 		-lcurl -ljson-c -l git2
 
 debug-allow-warn:
