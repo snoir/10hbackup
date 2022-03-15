@@ -79,10 +79,15 @@ main(int argc, char *argv[])
 
 	for (int i = 0; i < (int)(sizeof(categories) / sizeof(categories[0])); i++) {
 		res = get_category(categories[i], curl, token, output_dir, &requests_counting);
+		if (res == -1) {
+			res = EXIT_FAILURE;
+			goto cleanup;
+		}
 	}
 
 	res = git_add_and_commit(output_dir);
 
+cleanup:
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
 	free(token);
@@ -371,7 +376,7 @@ git_add_and_commit(char *output_dir) {
 		goto cleanup;
 	}
 
-	git_res = git_signature_now(&me, "Me", "me@example.com");
+	git_res = git_signature_now(&me, NULL, NULL);
 	if (git_res != 0) {
 		goto cleanup;
 	}
