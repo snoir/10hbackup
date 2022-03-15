@@ -86,6 +86,10 @@ main(int argc, char *argv[])
 	}
 
 	res = git_add_and_commit(output_dir);
+	if (res == -1) {
+		res = EXIT_FAILURE;
+		goto cleanup;
+	}
 
 cleanup:
 	curl_easy_cleanup(curl);
