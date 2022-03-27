@@ -21,8 +21,8 @@ read_config(char *path, config_key_value **config) {
 		key = strtok(line, "=");
 		value = strtok(NULL, "=");
 		value[strlen(value) - 1] = '\0';
-		value_size = strlen(value);
-		key_size = strlen(key);
+		value_size = strlen(value) + 1;
+		key_size = strlen(key) + 1;
 
 		config_ptr[nb_elem].key = malloc(key_size);
 		config_ptr[nb_elem].value = malloc(value_size);
