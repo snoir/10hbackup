@@ -42,12 +42,13 @@ int
 get_category(char* category, CURL *curl, char *token, char *output_dir, struct request_count *requests_counting);
 
 int
-git_add_and_commit(char *output_dir);
+git_add_and_commit(char *output_dir, char *name, char *email);
 
 int
 main(int argc, char *argv[])
 {
 	char *token = NULL, *output_dir = NULL, *config_file = NULL;
+	char *name = NULL, *email = NULL;
 	char *categories[] = {"albums", "playlists"};
 	int res = EXIT_SUCCESS, ch, config_size;
 	struct request_count requests_counting;
@@ -70,6 +71,8 @@ main(int argc, char *argv[])
 	config_size = read_config(config_file, &config);
 	output_dir = get_conf(config, config_size, "output_dir");
 	token = get_conf(config, config_size, "token");
+	email = get_conf(config, config_size, "git_email");
+	name = get_conf(config, config_size, "git_name");
 
 	curl_global_init(CURL_GLOBAL_ALL);
 	CURL *curl = curl_easy_init();
@@ -85,7 +88,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	res = git_add_and_commit(output_dir);
+	res = git_add_and_commit(output_dir, name, email);
 	if (res == -1) {
 		res = EXIT_FAILURE;
 		goto cleanup;
@@ -96,6 +99,9 @@ cleanup:
 	curl_global_cleanup();
 	free(token);
 	free(output_dir);
+	free(name);
+	free(email);
+	free(config);
 
 	return (res);
 }
@@ -353,7 +359,7 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 }
 
 int
-git_add_and_commit(char *output_dir) {
+git_add_and_commit(char *output_dir, char *name, char *email) {
 	int res = 0, git_res = 0;
 	char commit_message[50], date_rfc2822[32];
 	char *git_path[] = {"."};
@@ -380,7 +386,7 @@ git_add_and_commit(char *output_dir) {
 		goto cleanup;
 	}
 
-	git_res = git_signature_now(&me, NULL, NULL);
+	git_res = git_signature_now(&me, name, email);
 	if (git_res != 0) {
 		goto cleanup;
 	}
