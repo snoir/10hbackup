@@ -3,7 +3,6 @@
 10hbackup purposes is to make an export of a user Deezer data:
 - playlists
 - albums (liked)
-- artists (liked)
 
 For each categories, a "main" JSON containing item list is created on disk
 (like `playlists.json`). The detailed JSON of each item is also fetched and
@@ -16,11 +15,4 @@ Deezer Rest API is used to achieve that.
 10hbackup requires the following libraries:
 - libcurl
 - json-c
-
-## Todo
-
-- Read the Deezer token from a file
-- Store data in a Git repository (using libgit2)
-- Add the possibility to only download the "index" of a category (for example,
-  we might want to have the liked artist list but without the JSON containing
-  all of its tracks)
+- libgit2
