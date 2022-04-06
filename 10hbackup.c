@@ -372,6 +372,7 @@ git_add_and_commit(char *output_dir, char *name, char *email) {
 	git_signature *me = NULL;
 	git_object *parent = NULL;
 	git_reference *ref = NULL;
+	git_status_list *status = NULL;
 
 	git_libgit2_init();
 
@@ -405,6 +406,16 @@ git_add_and_commit(char *output_dir, char *name, char *email) {
 
 	git_res = git_index_add_all(idx, &git_arr, 0, NULL, 0);
 	if (git_res != 0) {
+		goto cleanup;
+	}
+
+	git_res = git_status_list_new(&status, repo, NULL);
+	if (git_res != 0) {
+		goto cleanup;
+	}
+
+	if (git_status_list_entrycount(status) == 0) {
+		printf("Nothing to commit, ending…\n");
 		goto cleanup;
 	}
 
