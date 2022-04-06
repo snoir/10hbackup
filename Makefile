@@ -1,14 +1,19 @@
-all: debug
+PROG= 10hbackup
+OBJS= 10hbackup.o 10hbackup_config.o
+CFLAGS= -Wall -Wextra -Werror
+LDFLAGS= -lcurl -ljson-c -l git2
+CC_ARGS= -o ${PROG} ${OBJS} ${CFLAGS} ${LDFLAGS}
+DEBUG_ARGS= -g -fsanitize=address
+CC= clang
 
-debug:
-	clang -g -Wall -Wextra -Werror -fsanitize=address -o 10hbackup 10hbackup.c 10hbackup_config.c \
-		-lcurl -ljson-c -l git2
+${PROG}: ${OBJS}
+	${CC} ${CC_ARGS}
 
-debug-allow-warn:
-	clang -g -Wall -fsanitize=address -Wextra -o 10hbackup 10hbackup.c 10hbackup_config.c \
-		-lcurl -ljson-c -l git2
+debug: ${OBJS}
+	${CC} ${CC_ARGS} ${DEBUG_ARGS}
 
-release:
-	clang -Wall -Wextra -Werror -o 10hbackup 10hbackup.c 10hbackup_config.c \
-		-lcurl -ljson-c -l git2
+.c.o:
+	${CC} -c $<
 
+clean:
+	rm -f ${PROG} *.o
