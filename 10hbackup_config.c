@@ -1,4 +1,4 @@
-#include <err.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +14,7 @@ read_config(char *path, config_key_value **config) {
 
 	fd = fopen(path, "r");
 	if (fd == NULL) {
-		fprintf(stderr, "File '%s' could not be opened\n", path);
+		fprintf(stderr, "Unable to open config file '%s': %s\n", path, strerror(errno));
 		return (-1);
 	}
 

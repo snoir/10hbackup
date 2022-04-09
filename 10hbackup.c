@@ -1,4 +1,5 @@
 #include <curl/curl.h>
+#include <errno.h>
 #include <git2.h>
 #include <json-c/json.h>
 #include <stdlib.h>
@@ -264,16 +265,16 @@ write_json_to_file(json_object *json_data, char *filename)
 	json_file = fopen(filename, "w+");
 
 	if (json_file == NULL) {
-		fprintf(stderr, "File '%s' could not be opened", filename);
+		fprintf(stderr, "Unable to open file '%s': %s", filename, strerror(errno));
 		return (-1);
 	}
 
-	if (ferror(json_file)) {
+	if(fprintf(json_file, "%s", json_data_string) < 0) {
 		fprintf(stderr, "Error while writing to '%s'", filename);
+		fclose(json_file);
 		return (-1);
 	}
 
-	fprintf(json_file, "%s", json_data_string);
 	fclose(json_file);
 
 	return (0);
