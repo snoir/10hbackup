@@ -103,11 +103,7 @@ main(int argc, char *argv[])
 cleanup:
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
-	free(token);
-	free(output_dir);
-	free(name);
-	free(email);
-	free(config);
+	free_config(config, config_size);
 
 cleanup_no_config:
 	free(config_file);

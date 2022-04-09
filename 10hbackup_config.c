@@ -53,3 +53,11 @@ get_conf(config_key_value *config, int config_size, char *key) {
 
 	return res;
 }
+
+void
+free_config(config_key_value *config, int config_size) {
+	for (int i = 0; i < config_size; i++) {
+		free(config[i].key);
+	}
+	free(config);
+}
