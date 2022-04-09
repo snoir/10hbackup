@@ -13,6 +13,11 @@ read_config(char *path, config_key_value **config) {
 	config_key_value *config_ptr;
 
 	fd = fopen(path, "r");
+	if (fd == NULL) {
+		fprintf(stderr, "File '%s' could not be opened\n", path);
+		return (-1);
+	}
+
 	*config = malloc(0);
 
 	while(fgets(line, sizeof(line), fd)) {

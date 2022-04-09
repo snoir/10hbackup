@@ -10,10 +10,10 @@ ${PROG}: ${OBJS}
 	${CC} ${CC_ARGS}
 
 debug: ${OBJS}
-	${CC} ${CC_ARGS} ${DEBUG_ARGS}
+	${CC} ${DEBUG_ARGS} ${CC_ARGS}
 
 .c.o:
-	${CC} -c $<
+	${CC} ${CFLAGS} -c $<
 
 clean:
 	rm -f ${PROG} *.o

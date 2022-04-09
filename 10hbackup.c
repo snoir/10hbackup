@@ -69,6 +69,11 @@ main(int argc, char *argv[])
 	argv += optind;
 
 	config_size = read_config(config_file, &config);
+	if (config_size == -1) {
+		res = EXIT_FAILURE;
+		goto cleanup_no_config;
+	}
+
 	output_dir = get_conf(config, config_size, "output_dir");
 	token = get_conf(config, config_size, "token");
 	email = get_conf(config, config_size, "git_email");
@@ -102,6 +107,9 @@ cleanup:
 	free(name);
 	free(email);
 	free(config);
+
+cleanup_no_config:
+	free(config_file);
 
 	return (res);
 }
