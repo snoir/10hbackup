@@ -84,7 +84,7 @@ main(int argc, char *argv[])
 			fprintf(stderr, "Missing '%s' parameter in configuration\n",
 					required_config_parameters[i]);
 			res = EXIT_FAILURE;
-			goto cleanup_no_config;
+			goto cleanup_config;
 		}
 	}
 
@@ -116,6 +116,8 @@ main(int argc, char *argv[])
 cleanup:
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
+
+cleanup_config:
 	free_config(config, config_size);
 
 cleanup_no_config:
