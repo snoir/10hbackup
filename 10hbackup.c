@@ -11,6 +11,9 @@
 
 #define BASE_DEEZER_URI "https://api.deezer.com"
 
+char *categories[] = {"albums", "playlists"};
+char *required_config_parameters[] = {"token", "output_dir", "git_name", "git_email"};
+
 struct http_data {
 	size_t size;
 	char **data;
@@ -50,7 +53,6 @@ main(int argc, char *argv[])
 {
 	char *token = NULL, *output_dir = NULL, *config_file = NULL;
 	char *name = NULL, *email = NULL;
-	char *categories[] = {"albums", "playlists"};
 	int res = EXIT_SUCCESS, ch, config_size;
 	struct request_count requests_counting;
 	config_key_value *config;
@@ -73,6 +75,17 @@ main(int argc, char *argv[])
 	if (config_size == -1) {
 		res = EXIT_FAILURE;
 		goto cleanup_no_config;
+	}
+
+	for (int i = 0; i < (int)(sizeof(required_config_parameters) / sizeof(char *)); i++) {
+		char *config_param_value = get_conf(config, config_size, required_config_parameters[i]);
+		if (config_param_value == NULL ||
+		    strncmp(config_param_value, "", strlen(config_param_value)) == 0) {
+			fprintf(stderr, "Missing '%s' parameter in configuration\n",
+					required_config_parameters[i]);
+			res = EXIT_FAILURE;
+			goto cleanup_no_config;
+		}
 	}
 
 	output_dir = get_conf(config, config_size, "output_dir");
