@@ -48,6 +48,9 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 int
 git_add_and_commit(char *output_dir, char *name, char *email);
 
+void
+usage();
+
 int
 main(int argc, char *argv[])
 {
@@ -57,6 +60,9 @@ main(int argc, char *argv[])
 	struct request_count requests_counting;
 	config_key_value *config;
 
+	if (argc < 2)
+		usage();
+
 	while ((ch = getopt(argc, argv, "c:")) != -1) {
 		switch (ch) {
 		case 'c':
@@ -65,7 +71,7 @@ main(int argc, char *argv[])
 			break;
 		case '?':
 		default:
-			exit(EXIT_FAILURE);
+			usage();
 		}
 	}
 	argc -= optind;
@@ -485,4 +491,11 @@ cleanup:
 	git_libgit2_shutdown();
 
 	return (res);
+}
+
+void
+usage()
+{
+	fprintf(stderr, "usage: 10hbackup -c config_file\n");
+	exit (EXIT_FAILURE);
 }
