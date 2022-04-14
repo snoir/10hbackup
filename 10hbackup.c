@@ -63,12 +63,14 @@ main(int argc, char *argv[])
 	if (argc < 2)
 		usage();
 
-	while ((ch = getopt(argc, argv, "c:")) != -1) {
+	while ((ch = getopt(argc, argv, "hc:")) != -1) {
 		switch (ch) {
 		case 'c':
 			config_file = malloc(sizeof(char) * strlen(optarg) + 1);
 			strncpy(config_file, optarg, strlen(optarg) + 1);
 			break;
+		case 'h':
+			usage();
 		case '?':
 		default:
 			usage();
