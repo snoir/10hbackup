@@ -66,8 +66,7 @@ main(int argc, char *argv[])
 	while ((ch = getopt(argc, argv, "hc:")) != -1) {
 		switch (ch) {
 		case 'c':
-			config_file = malloc(sizeof(char) * strlen(optarg) + 1);
-			strncpy(config_file, optarg, strlen(optarg) + 1);
+			config_file = optarg;
 			break;
 		case 'h':
 			usage();
@@ -82,7 +81,6 @@ main(int argc, char *argv[])
 	config_size = read_config(config_file, &config);
 	if (config_size == -1) {
 		res = EXIT_FAILURE;
-		goto cleanup_no_config;
 	}
 
 	for (int i = 0; i < (int)(sizeof(required_config_parameters) / sizeof(char *)); i++) {
@@ -127,9 +125,6 @@ cleanup:
 
 cleanup_config:
 	free_config(config, config_size);
-
-cleanup_no_config:
-	free(config_file);
 
 	return (res);
 }
