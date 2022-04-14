@@ -164,11 +164,15 @@ get_json_data_array(CURL *handler, char *uri, json_object *item_list_array, stru
 	json_object *deezer_error;
 	int http_res, ts_diff;
 	size_t nb_items;
-	char *buffer;
+	char *buffer = NULL;
 	const char *uri_next = uri;
 
 	while (uri_next != NULL) {
 		buffer = malloc(1);
+		if (buffer == NULL) {
+			fprintf(stderr, "Memory allocation failed\n");
+			return (-1);
+		}
 		if (requests_counting->nb == 50) {
 			ts_diff = difftime((int)time(NULL), requests_counting->ts);
 			if (ts_diff < 6)
@@ -244,8 +248,12 @@ deezer_callback(char *data, size_t size, size_t nmemb, struct http_data *userdat
 char *
 uri_concat(char *path, char *token) {
 	int uri_size = strlen(BASE_DEEZER_URI) + strlen(path);
-	char *uri = malloc(sizeof(char) * (uri_size + 1));
 	char *full_uri;
+	char *uri = malloc(sizeof(char) * (uri_size + 1));
+	if (uri == NULL) {
+		fprintf(stderr, "Memory allocation failed\n");
+		return (NULL);
+	}
 
 	strncpy(uri, BASE_DEEZER_URI, strlen(BASE_DEEZER_URI) + 1);
 	strncat(uri, path, strlen(path) + 1);
@@ -261,6 +269,11 @@ uri_add_token(char *uri, char *token) {
 	int full_uri_size = strlen(uri) + strlen(token) +
 		strlen("?access_token=");
 	char *full_uri = malloc(sizeof(char) * (full_uri_size +1));
+
+	if (full_uri == NULL) {
+		fprintf(stderr, "Memory allocation failed\n");
+		return (NULL);
+	}
 
 	strncpy(full_uri, uri, strlen(uri) + 1);
 	strncat(full_uri, "?access_token=", strlen("?access_token=") + 1);
@@ -332,10 +345,18 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 		item_full_uri = uri_add_token((char *)item_uri, token);
 		item_id_str_len = snprintf(NULL, 0, "%lu", item_id) + 1;
 		item_id_str = malloc(item_id_str_len + 1);
+		if (item_id_str == NULL) {
+			fprintf(stderr, "Memory allocation failed\n");
+			return (-1);
+		}
 		snprintf(item_id_str, item_id_str_len, "%lu", item_id);
 		file_path_len = strlen(category_output_dir) + item_id_str_len +
 			strlen(".json") + 2;
 		file_path = malloc(file_path_len);
+		if (file_path == NULL) {
+			fprintf(stderr, "Memory allocation failed\n");
+			return (-1);
+		}
 		snprintf(file_path, file_path_len, "%s/%s%s", category_output_dir, item_id_str, ".json");
 
 		fprintf(stdout, "[%s] Fetching item '%s'\n", category, item_id_str);
@@ -367,6 +388,10 @@ get_category(char* category, CURL *curl, char *token, char *output_dir, struct r
 
 	file_path = malloc(strlen(output_dir) + strlen(category) +
 			strlen(".json") + 2);
+	if (file_path == NULL) {
+		fprintf(stderr, "Memory allocation failed\n");
+		return (-1);
+	}
 	snprintf(file_path, strlen(output_dir) + strlen(category) + strlen("json") + 3,
 			"%s/%s.%s", output_dir, category, "json");
 
