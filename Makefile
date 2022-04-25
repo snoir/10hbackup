@@ -1,16 +1,18 @@
 PROG= 10hbackup
 OBJS= 10hbackup.o 10hbackup_config.o
-CFLAGS= -Wall -Wextra -Werror
 LDFLAGS= -lcurl -ljson-c -l git2
-CC_ARGS= -o ${PROG} ${OBJS} ${CFLAGS} ${LDFLAGS}
-DEBUG_ARGS= -g -fsanitize=address
 CC= clang
 
-${PROG}: ${OBJS}
-	${CC} ${CC_ARGS}
+.ifdef DEBUG
+CFLAGS= -g -fsanitize=address -Wall -Wextra -Werror
+.elifdef DEBUG_ALLOW_WARN
+CFLAGS= -g
+.else
+CFLAGS= -Wall -Wextra -Werror
+.endif
 
-debug: ${OBJS}
-	${CC} ${DEBUG_ARGS} ${CC_ARGS}
+${PROG}: ${OBJS}
+	${CC} -o ${PROG} ${OBJS} ${CFLAGS} ${LDFLAGS}
 
 .c.o:
 	${CC} ${CFLAGS} -c $<
