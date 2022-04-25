@@ -19,3 +19,14 @@ Deezer Rest API is used to achieve that.
 - libcurl
 - json-c
 - libgit2
+
+## How to use
+
+Create a config file (see `config` from this repository), and then launch
+10hbackup to start exporting the Deezer data.
+
+```
+./10hbackup -c /home/auser/.10hbackup.conf
+```
+
+To make an export regularly to the git repository, launch 10hbackup with a cron.
